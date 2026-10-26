@@ -67,3 +67,7 @@ Conexión: `wss://relay/?role=host&room=SALA` con el header `X-Relay-Secret: CLA
 ## Verificado
 
 Con el relay local: arena (dedicado, LAN, cliente tardío, lag, inundación), salas (siete escenarios) y partida privada por el relay. Railway en sí no se probó desde acá: el relay es el mismo archivo.
+
+## Licencia
+
+[MIT](LICENSE).

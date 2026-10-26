@@ -67,3 +67,7 @@ Connection: `wss://relay/?role=host&room=ROOM` with the header `X-Relay-Secret: 
 ## Verified
 
 With the relay running locally: arena (dedicated, LAN, late joiner, lag, flood), rooms (seven scenarios) and the private match through the relay. Railway itself was not tested from here: the relay is the same file.
+
+## License
+
+[MIT](LICENSE).
