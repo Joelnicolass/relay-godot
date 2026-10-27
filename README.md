@@ -22,6 +22,17 @@ No dependencies: `server.mjs` only needs Node 18+.
 
 Try it locally first: `PORT=8080 RELAY_HOST_SECRET=test node server.mjs` and `ws://127.0.0.1:8080`. For tests on your machine, `RELAY_OPEN=1` allows hosting without a secret; never use it on a public relay.
 
+### Or on Fly.io (a region near your players, e.g. São Paulo)
+
+Fly has regions Railway does not (`gru` for South America). This repo has the `Dockerfile` and `fly.toml` for it.
+
+1. Install `flyctl` and log in: `fly auth login`.
+2. In `fly.toml`, set `app` to a name of yours (it is global on Fly) and `primary_region` to the region nearest your players (`fly platform regions`).
+3. `fly apps create <your-app>`, then the host secret (never in a file of the repo): `fly secrets set --app <your-app> RELAY_HOST_SECRET=<a long random key>`.
+4. `fly deploy --ha=false`: one machine (rooms live in its memory). The address is `wss://<your-app>.fly.dev`; `/health` answers `ok`.
+
+`fly.toml` keeps the machine on (`auto_stop_machines = "off"`, `min_machines_running = 1`): an idle stop would cut the open WebSockets. Cost: the smallest machine plus outbound traffic per GB (see Fly's pricing).
+
 ## 2. Set up the game
 
 In the game's `game.tres` (an `MpGame`; or the `MpNetConfig` you use):
@@ -66,7 +77,7 @@ Connection: `wss://relay/?role=host&room=ROOM` with the header `X-Relay-Secret: 
 
 ## Verified
 
-With the relay running locally: arena (dedicated, LAN, late joiner, lag, flood), rooms (seven scenarios) and the private match through the relay. Railway itself was not tested from here: the relay is the same file.
+With the relay running locally: arena (dedicated, LAN, rejoin, lag, flood), rooms (seven scenarios) and the private match through the relay. On Fly.io (`gru`), tested from Argentina: arena, rooms, the private match and a web client pass through it; the kit measured a 59 ms round trip through the relay (Railway, in the US: about 300 ms).
 
 ## License
 
