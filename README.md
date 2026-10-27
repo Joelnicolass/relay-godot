@@ -75,6 +75,50 @@ Binary messages, little-endian:
 
 Connection: `wss://relay/?role=host&room=ROOM` with the header `X-Relay-Secret: KEY` (`&secret=KEY` is accepted too), or `?role=client&room=ROOM`.
 
+## 5. Useful commands
+
+A host secret (copy it into the relay and into the Godot server, nowhere else):
+
+```bash
+openssl rand -hex 24
+```
+
+The relay on your machine:
+
+```bash
+PORT=8080 RELAY_HOST_SECRET=test node server.mjs   # ws://127.0.0.1:8080
+RELAY_OPEN=1 PORT=8080 node server.mjs             # anyone may host: local tests only
+curl http://127.0.0.1:8080/health   # ok
+```
+
+On Fly.io (`<your-app>` = `app` in `fly.toml`):
+
+```bash
+fly auth login
+fly apps create <your-app>
+fly secrets set --app <your-app> RELAY_HOST_SECRET=<key>   # add --stage before the first deploy
+fly deploy --ha=false                 # deploy or update, one machine
+fly status --app <your-app>           # the machine, its region, the /health check
+fly logs --app <your-app>             # live log: hosts in, refused hosts, rooms
+curl https://<your-app>.fly.dev/health   # ok
+fly secrets list --app <your-app>     # names and digests, never the values
+fly scale count 0 --app <your-app>    # stop it (no machine billed)
+fly scale count 1 --app <your-app>    # start it again
+fly platform regions                  # region codes (gru = São Paulo)
+fly apps destroy <your-app>           # remove it for good
+```
+
+On Railway: **Variables** (`RELAY_HOST_SECRET`), **Deployments › View logs**, **Settings › Networking** (the domain).
+
+The Godot server through the relay (the secret by environment, never in the `.tres`):
+
+```bash
+MPKIT_RELAY_SECRET=<key> godot --headless --path . -- --dedicated --transport=relay --relay-url=wss://<your-relay> --relay-room=my-game
+MPKIT_RELAY_SECRET=<key> godot --headless --path . -- --room-server   # with relay_url / relay_room in game.tres
+```
+
+Check the relay's rules from the kit repo: `bash mpkit_lab/run/relay.sh` (host secret, busy room) and `bash mpkit_lab/run/relayfault.sh` (a host that dies, freezes or restarts); the whole game through a local relay: `TRANSPORT=relay bash mpkit_lab/run/arena.sh`.
+
 ## Verified
 
 With the relay running locally: arena (dedicated, LAN, rejoin, lag, flood), rooms (seven scenarios) and the private match through the relay. On Fly.io (`gru`), tested from Argentina: arena, rooms, the private match and a web client pass through it; the kit measured a 59 ms round trip through the relay (Railway, in the US: about 300 ms).
