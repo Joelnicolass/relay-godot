@@ -73,6 +73,14 @@ Flags equivalentes: `--transport=relay --relay-url=wss://… --relay-room=mi-jue
 - Topes por entorno: `RELAY_MAX_CLIENTS` por sala (64), `RELAY_MAX_MESSAGE` en bytes (262144).
 - No guarda nada, no ve el juego, no mezcla salas. Latencia: la del relay en el medio (elegí una región cerca de tus jugadores).
 
+## 3b. Salas de jugadores (los tokens del emisor de MpKit)
+
+Las salas `p-<código>` son de jugadores: el [emisor de MpKit](https://github.com/Joelnicolass/godot-studio-skills/blob/release/spanish/addons/mp_kit/issuer/README.md) reparte sus códigos y firma tokens cortos con su clave privada Ed25519; este relay solo tiene la clave **pública** (la chequea `jose`), así que puede chequear tokens pero nunca fabricarlos.
+
+- `RELAY_TOKEN_KEYS`: la o las claves públicas como las imprime el `keys.mjs` del emisor, `{"keys":[…]}`. Sin ella se rechaza toda sala `p-`; una clave privada ahí frena el relay antes de arrancar. En Fly: `fly secrets import --app <tu-relay>` con `RELAY_TOKEN_KEYS=…` por stdin, y después `fly deploy`.
+- Hospedar y entrar a una sala `p-` piden cada uno un token para esa sala y ese rol (`?token=…` o el header `X-Relay-Token`). El secreto no abre una sala `p-`, y un token no abre una sala de servidor (`<juego>-<puerto>`).
+- Un token sirve para una conexión (se gasta cuando el peer queda sentado); el `max` de un token de host limita los clientes de esa sala. Los rechazos quedan en el log con el motivo, nunca el token.
+
 ## 4. Protocolo (por si querés otro relay)
 
 Mensajes binarios, little-endian:
