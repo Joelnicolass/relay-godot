@@ -10,17 +10,26 @@ jugador PC  ─┼── wss://tu-relay.up.railway.app ──── servidor God
 jugador PC  ─┘          (sala juego-7777)              se conecta como host de la sala
 ```
 
-No tiene dependencias: `server.mjs` usa solo Node 18+.
+Node 18+ y una dependencia, [`ws`](https://github.com/websockets/ws) (la librería de WebSocket habitual en Node): corré `npm install` una vez. El código es corto y está separado por tarea:
+
+| Archivo | Qué hace |
+|---|---|
+| `server.mjs` | Arranca el relay con la configuración del entorno |
+| `lib/config.mjs` | Las variables de entorno y sus valores por defecto |
+| `lib/protocol.mjs` | Los mensajes binarios y los códigos de cierre (sección 4) |
+| `lib/rooms.mjs` | Las reglas: quién hostea una sala, quién entra, a dónde va cada mensaje, hosts mudos |
+| `lib/relay.mjs` | HTTP, `/health`, el secreto del host, cada WebSocket entregado a las reglas |
+| `test/` | `npm test`: las reglas con peers falsos, y el relay de punta a punta |
 
 ## 1. Subirlo a Railway
 
-1. Hacé fork o cloná este repo (solo tiene `server.mjs` y `package.json`).
-2. En Railway: **New Project › Deploy from GitHub repo** y elegilo. Railway detecta Node y corre `npm start`.
+1. Hacé fork o cloná este repo (`server.mjs`, `lib/`, `package.json`, `package-lock.json`, las pruebas y los archivos de Fly).
+2. En Railway: **New Project › Deploy from GitHub repo** y elegilo. Railway detecta Node, instala `ws` y corre `npm start`.
 3. En **Variables**: `RELAY_HOST_SECRET` = una clave larga al azar. Sin ella el relay no deja hostear a nadie.
 4. En **Settings › Networking**: **Generate Domain**. Te queda algo como `tu-relay.up.railway.app`. Railway pone el TLS: la dirección es `wss://tu-relay.up.railway.app`.
 5. Healthcheck (opcional): ruta `/health`.
 
-Probalo local antes: `PORT=8080 RELAY_HOST_SECRET=prueba node server.mjs` y `ws://127.0.0.1:8080`. Para pruebas en tu máquina, `RELAY_OPEN=1` deja hostear sin secreto; nunca lo uses en un relay público.
+Probalo local antes: `npm install`, después `PORT=8080 RELAY_HOST_SECRET=prueba node server.mjs` y `ws://127.0.0.1:8080`. Para pruebas en tu máquina, `RELAY_OPEN=1` deja hostear sin secreto; nunca lo uses en un relay público.
 
 ### O en Fly.io (una región cerca de tus jugadores, p.ej. São Paulo)
 
@@ -86,6 +95,8 @@ openssl rand -hex 24
 El relay en tu máquina:
 
 ```bash
+npm install                                          # una vez: la dependencia ws
+npm test                                             # las pruebas del relay
 PORT=8080 RELAY_HOST_SECRET=prueba node server.mjs   # ws://127.0.0.1:8080
 RELAY_OPEN=1 PORT=8080 node server.mjs               # cualquiera puede hostear: solo pruebas locales
 curl http://127.0.0.1:8080/health   # ok

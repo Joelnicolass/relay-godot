@@ -2,3 +2,4 @@
 *.md
 fly.toml
 node_modules
+test

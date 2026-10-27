@@ -1,14 +1,16 @@
 {
-  "name": "relay-godot",
-  "version": "1.0.0",
-  "description": "WebSocket relay for MpKit's relay transport (Godot). No dependencies.",
+  "name": "mpkit-relay",
+  "version": "2.0.0",
+  "description": "WebSocket relay for MpKit's relay transport (Godot).",
+  "license": "MIT",
   "type": "module",
   "main": "server.mjs",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "test": "node --test"
   },
-  "engines": {
-    "node": ">=18"
+  "dependencies": {
+    "ws": "^8.22.0"
   },
-  "license": "MIT"
+  "engines": { "node": ">=18" }
 }
