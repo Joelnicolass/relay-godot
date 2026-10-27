@@ -10,17 +10,26 @@ PC player   ─┼── wss://your-relay.up.railway.app ──── Godot serv
 PC player   ─┘          (room game-7777)                connects as the host of the room
 ```
 
-No dependencies: `server.mjs` only needs Node 18+.
+Node 18+ and one dependency, [`ws`](https://github.com/websockets/ws) (the usual WebSocket library for Node): run `npm install` once. The code is short and split by job:
+
+| File | What it does |
+|---|---|
+| `server.mjs` | Starts the relay with the settings from the environment |
+| `lib/config.mjs` | The environment variables and their defaults |
+| `lib/protocol.mjs` | The binary messages and close codes (section 4) |
+| `lib/rooms.mjs` | The rules: who hosts a room, who joins, where each message goes, silent hosts |
+| `lib/relay.mjs` | HTTP, `/health`, the host secret, each WebSocket handed to the rules |
+| `test/` | `npm test`: the rules with fake peers, and the relay end to end |
 
 ## 1. Put it on Railway
 
-1. Fork or clone this repo (it only has `server.mjs` and `package.json`).
-2. On Railway: **New Project › Deploy from GitHub repo** and pick it. Railway detects Node and runs `npm start`.
+1. Fork or clone this repo (`server.mjs`, `lib/`, `package.json`, `package-lock.json`, the tests and the Fly files).
+2. On Railway: **New Project › Deploy from GitHub repo** and pick it. Railway detects Node, installs `ws` and runs `npm start`.
 3. Under **Variables**: `RELAY_HOST_SECRET` = a long random key. Without it the relay lets nobody host.
 4. Under **Settings › Networking**: **Generate Domain**. You get something like `your-relay.up.railway.app`. Railway adds TLS: the address is `wss://your-relay.up.railway.app`.
 5. Healthcheck (optional): path `/health`.
 
-Try it locally first: `PORT=8080 RELAY_HOST_SECRET=test node server.mjs` and `ws://127.0.0.1:8080`. For tests on your machine, `RELAY_OPEN=1` allows hosting without a secret; never use it on a public relay.
+Try it locally first: `npm install`, then `PORT=8080 RELAY_HOST_SECRET=test node server.mjs` and `ws://127.0.0.1:8080`. For tests on your machine, `RELAY_OPEN=1` allows hosting without a secret; never use it on a public relay.
 
 ### Or on Fly.io (a region near your players, e.g. São Paulo)
 
@@ -86,6 +95,8 @@ openssl rand -hex 24
 The relay on your machine:
 
 ```bash
+npm install                                        # once: the ws dependency
+npm test                                           # the relay's own tests
 PORT=8080 RELAY_HOST_SECRET=test node server.mjs   # ws://127.0.0.1:8080
 RELAY_OPEN=1 PORT=8080 node server.mjs             # anyone may host: local tests only
 curl http://127.0.0.1:8080/health   # ok
