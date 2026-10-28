@@ -73,6 +73,14 @@ Equivalent flags: `--transport=relay --relay-url=wss://… --relay-room=my-game 
 - Limits from the environment: `RELAY_MAX_CLIENTS` per room (64), `RELAY_MAX_MESSAGE` in bytes (262144).
 - It stores nothing, never sees the game, never mixes rooms. Latency: the relay's hop in the middle (pick a region near your players).
 
+## 3b. Player rooms (the MpKit issuer's tokens)
+
+Rooms named `p-<code>` belong to players: the [MpKit issuer](https://github.com/Joelnicolass/godot-studio-skills/blob/main/addons/mp_kit/issuer/README.md) hands out their codes and signs short tokens with its Ed25519 private key; this relay only holds the **public** key (`jose` checks it), so it can check tokens but never make them.
+
+- `RELAY_TOKEN_KEYS`: the public key(s) as the issuer's `keys.mjs` prints them, `{"keys":[…]}`. Without it every `p-` room is refused; a private key there stops the relay before it starts. On Fly: `fly secrets import --app <your-relay>` with `RELAY_TOKEN_KEYS=…` on stdin, then `fly deploy`.
+- Hosting and joining a `p-` room each need a token for that room and that role (`?token=…` or the `X-Relay-Token` header). The secret does not open a `p-` room, and a token does not open a server room (`<game>-<port>`).
+- A token works for one connection (spent once the peer is seated); a host token's `max` caps that room's clients. Refusals are logged with the reason, never the token.
+
 ## 4. Protocol (to write another relay)
 
 Binary messages, little-endian:
